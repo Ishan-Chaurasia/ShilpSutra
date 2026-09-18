@@ -68,6 +68,12 @@ export function VoiceToProductFlow({ onCancelToDirectUpload }: VoiceToProductFlo
       setGeneratedResult(result);
     } catch {
       showToast("Using matching studio photo while offline.", "info");
+      setGeneratedResult({
+        imageUrl: getFallbackImage(updatedDetails),
+        prompt,
+        seed: 42,
+        timestamp: new Date().toISOString(),
+      });
     } finally {
       setIsGeneratingImage(false);
     }
@@ -79,10 +85,20 @@ export function VoiceToProductFlow({ onCancelToDirectUpload }: VoiceToProductFlo
     setIsGeneratingImage(true);
     const prompt = buildImagePromptFromDetails(details);
     const newSeed = Math.floor(Math.random() * 999999);
-    const result = await generateCraftImage(prompt, newSeed, details);
-    setGeneratedResult(result);
-    setIsGeneratingImage(false);
-    showToast("Generated new craft photo variation!", "success");
+    try {
+      const result = await generateCraftImage(prompt, newSeed, details);
+      setGeneratedResult(result);
+      showToast("Generated new craft photo variation!", "success");
+    } catch {
+      setGeneratedResult({
+        imageUrl: getFallbackImage(details),
+        prompt,
+        seed: newSeed,
+        timestamp: new Date().toISOString(),
+      });
+    } finally {
+      setIsGeneratingImage(false);
+    }
   };
 
   // 4. Return to edit details if needed

@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
       req.headers.get("x-gemini-api-key") ||
       body.apiKey ||
       process.env.GEMINI_API_KEY ||
+      process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
       process.env.GOOGLE_API_KEY;
 
     if (apiKey && image && typeof image === "string" && image.includes("base64,")) {

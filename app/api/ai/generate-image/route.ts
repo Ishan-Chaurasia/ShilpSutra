@@ -20,17 +20,20 @@ export async function POST(req: NextRequest) {
       req.headers.get("x-gemini-api-key") ||
       body.apiKey ||
       process.env.GEMINI_API_KEY ||
+      process.env.NEXT_PUBLIC_GEMINI_API_KEY ||
       process.env.GOOGLE_API_KEY;
 
     if (!apiKey) {
-      return NextResponse.json({ error: "No API key available", fallback: true }, { status: 200 });
+      return NextResponse.json({ error: "No API key configured", fallback: true }, { status: 200 });
     }
 
     // Gemini native image generation models in priority order
     const candidateModels = [
+      "gemini-2.5-flash-image",
       "gemini-3.1-flash-image",
       "gemini-3.1-flash-lite-image",
-      "gemini-2.5-flash-image",
+      "gemini-3-pro-image",
+      "gemini-3.1-flash-image-preview",
     ];
 
     // Build the full product photography prompt
@@ -43,7 +46,7 @@ export async function POST(req: NextRequest) {
         const geminiRes = await fetch(geminiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          signal: AbortSignal.timeout(25000),
+          signal: AbortSignal.timeout(4000),
           body: JSON.stringify({
             contents: [
               {

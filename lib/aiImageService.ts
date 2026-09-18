@@ -183,8 +183,9 @@ export async function generateCraftImage(
       body: JSON.stringify({
         prompt: diffusionPrompt,
         negativePrompt,
+        apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY,
       }),
-      signal: AbortSignal.timeout(28000),
+      signal: AbortSignal.timeout(8000),
     });
 
     if (res.ok) {

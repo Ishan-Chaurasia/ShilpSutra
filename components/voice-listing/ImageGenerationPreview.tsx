@@ -46,24 +46,25 @@ export function ImageGenerationPreview({
   const [imgSrc, setImgSrc] = useState(imageUrl);
   const [cutoutUrl, setCutoutUrl] = useState<string | null>(null);
   const [isSegmenting, setIsSegmenting] = useState<boolean>(false);
-  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [isImageLoading, setIsImageLoading] = useState(false);
   const [hasCopiedPrompt, setHasCopiedPrompt] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState<string>("clean-white");
   const [compareMode, setCompareMode] = useState<"enhanced" | "raw">("enhanced");
 
   const { isCutout, containerClass, overlayClass, badgeLabel, filter } = getFilterStyleForPreset(selectedPreset);
 
+  const fallbackSrc = getFallbackImage(details);
+
   useEffect(() => {
     if (imageUrl && imageUrl.trim() !== "") {
       setImgSrc(imageUrl);
+      setIsImageLoading(false);
     }
     setCutoutUrl(null);
-    setIsImageLoading(true);
   }, [imageUrl]);
 
-  const fallbackSrc = getFallbackImage(details);
   const rawImage = (compareMode === "enhanced" && isCutout && cutoutUrl) ? cutoutUrl : (imgSrc || imageUrl);
-  const displaySrc = (rawImage && rawImage.trim() !== "") ? rawImage : (isGenerating ? null : fallbackSrc);
+  const displaySrc = (rawImage && rawImage.trim() !== "") ? rawImage : fallbackSrc;
 
   const handleCopyPrompt = () => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
@@ -73,7 +74,7 @@ export function ImageGenerationPreview({
     }
   };
 
-  const isLoading = isGenerating || isImageLoading;
+  const isLoading = isGenerating;
 
   return (
     <div className="bg-white rounded-3xl p-6 sm:p-8 border border-neutral-200 shadow-sm space-y-8">
