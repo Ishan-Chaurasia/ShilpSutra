@@ -49,12 +49,12 @@ Output strictly valid JSON only.`;
           prompt += `\nArtisan Workshop Craft Context: The artisan works primarily in "${categoryHint}". If the uploaded image depicts or relates to this craft tradition, categorize accordingly; otherwise identify the authentic craft accurately.`;
         }
 
-        // Active Google Gemini Vision models in priority order
+        // Active Google Gemini Vision models in priority order (3.5-flash-lite is ~2s ultra fast)
         const candidateModels = [
-          "gemini-2.5-flash",
-          "gemini-3.6-flash",
+          "gemini-3.5-flash-lite",
+          "gemini-3.5-flash",
           "gemini-3-flash-preview",
-          "gemini-flash-latest",
+          "gemini-2.5-flash",
         ];
 
         for (const model of candidateModels) {
@@ -64,7 +64,7 @@ Output strictly valid JSON only.`;
             const geminiRes = await fetch(geminiUrl, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              signal: AbortSignal.timeout(7500),
+              signal: AbortSignal.timeout(20000),
               body: JSON.stringify({
                 contents: [
                   {

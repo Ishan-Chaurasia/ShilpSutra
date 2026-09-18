@@ -339,3 +339,97 @@ function processCanvasCutout(
 
   return canvas.toDataURL("image/png");
 }
+
+/**
+ * Composites the isolated craft cutout onto a professional studio backdrop
+ * such as Clean Studio White, Warm Terracotta, Luxury Marble, etc.
+ */
+export async function compositeCraftOnStudioBackdrop(
+  imageUrl: string,
+  presetId: string = "clean-white",
+  options: BackgroundRemovalOptions = {}
+): Promise<string> {
+  if (typeof window === "undefined") return imageUrl;
+
+  // For remove-bg, return the transparent PNG cutout directly
+  const cutoutDataUrl = await removeBackgroundAccurately(imageUrl, options);
+  if (presetId === "remove-bg") {
+    return cutoutDataUrl;
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const width = img.naturalWidth || img.width || 1200;
+      const height = img.naturalHeight || img.height || 1200;
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(cutoutDataUrl);
+        return;
+      }
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+
+      // Synthesize realistic studio lighting & backdrops
+      if (presetId === "clean-white") {
+        const bgGrad = ctx.createRadialGradient(width / 2, height * 0.45, width * 0.08, width / 2, height / 2, width * 0.72);
+        bgGrad.addColorStop(0, "#FFFFFF");
+        bgGrad.addColorStop(0.65, "#F9FAFB");
+        bgGrad.addColorStop(1, "#E5E7EB");
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, width, height);
+      } else if (presetId === "warm-terracotta") {
+        const bgGrad = ctx.createRadialGradient(width / 2, height * 0.4, width * 0.1, width / 2, height / 2, width * 0.75);
+        bgGrad.addColorStop(0, "#FFF9F6");
+        bgGrad.addColorStop(0.5, "#F8ECE5");
+        bgGrad.addColorStop(1, "#EAD4C7");
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, width, height);
+      } else if (presetId === "luxury-marble") {
+        const bgGrad = ctx.createRadialGradient(width / 2, height * 0.4, width * 0.1, width / 2, height / 2, width * 0.75);
+        bgGrad.addColorStop(0, "#FFFFFF");
+        bgGrad.addColorStop(0.55, "#F1F5F9");
+        bgGrad.addColorStop(1, "#CBD5E1");
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, width, height);
+      } else if (presetId === "dark-dramatic") {
+        const bgGrad = ctx.createRadialGradient(width / 2, height * 0.4, width * 0.05, width / 2, height / 2, width * 0.7);
+        bgGrad.addColorStop(0, "#2D3748");
+        bgGrad.addColorStop(0.4, "#1A202C");
+        bgGrad.addColorStop(1, "#090D14");
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, width, height);
+      } else if (presetId === "minimal-pastel") {
+        const bgGrad = ctx.createRadialGradient(width / 2, height * 0.4, width * 0.1, width / 2, height / 2, width * 0.7);
+        bgGrad.addColorStop(0, "#FAFDFB");
+        bgGrad.addColorStop(0.6, "#EDF2EE");
+        bgGrad.addColorStop(1, "#DDE6DF");
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, width, height);
+      } else if (presetId === "golden-hour") {
+        const bgGrad = ctx.createRadialGradient(width * 0.38, height * 0.32, width * 0.08, width / 2, height / 2, width * 0.75);
+        bgGrad.addColorStop(0, "#FFFDF0");
+        bgGrad.addColorStop(0.5, "#FEF3C7");
+        bgGrad.addColorStop(1, "#FDE68A");
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(0, 0, width, height);
+      } else {
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, width, height);
+      }
+
+      // Draw the isolated craft cutout on top
+      ctx.drawImage(img, 0, 0, width, height);
+
+      resolve(canvas.toDataURL("image/jpeg", 0.92));
+    };
+    img.onerror = () => resolve(cutoutDataUrl);
+    img.src = cutoutDataUrl;
+  });
+}
+

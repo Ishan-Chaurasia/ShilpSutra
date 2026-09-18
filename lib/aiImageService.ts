@@ -185,14 +185,15 @@ export async function generateCraftImage(
         negativePrompt,
         apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY,
       }),
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(15000),
     });
 
     if (res.ok) {
       const data = await res.json();
-      if (data.imageDataUrl && !data.fallback) {
+      const chosenUrl = data.imageDataUrl || data.imageUrl;
+      if (chosenUrl && !data.fallback) {
         return {
-          imageUrl: data.imageDataUrl,
+          imageUrl: chosenUrl,
           prompt: diffusionPrompt,
           seed,
           timestamp,

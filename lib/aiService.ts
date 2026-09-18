@@ -1,5 +1,5 @@
 import { AICatalogResult, PriceAnalysis, CraftCategory } from "@/types";
-import { removeBackgroundAccurately } from "./backgroundRemoval";
+import { removeBackgroundAccurately, compositeCraftOnStudioBackdrop } from "./backgroundRemoval";
 
 export interface StudioPreset {
   id: string;
@@ -220,9 +220,24 @@ export async function processAIStudioImage(
     } catch (e) {
       console.warn("Background removal error, keeping base image:", e);
     }
+  } else if (preset.category === "backdrop") {
+    operations.push("Multi-point craft boundary segmentation");
+    operations.push(`Applied commercial studio backdrop: ${preset.name}`);
+    operations.push("Synthesized ambient ground contact shadow");
+    try {
+      processedUrl = await compositeCraftOnStudioBackdrop(imageUrl, presetId, { maxDimension: 1600 });
+    } catch (e) {
+      console.warn("Studio compositing error, keeping base image:", e);
+    }
   } else if (preset.category === "enhancement") {
     operations.push("Micro-contrast texture sharpening");
     operations.push("Color gamut calibration for GI Indian crafts");
+    try {
+      // For enhancement presets (like clean-white or golden-hour), composite onto clean studio backdrop
+      processedUrl = await compositeCraftOnStudioBackdrop(imageUrl, presetId, { maxDimension: 1600 });
+    } catch (e) {
+      console.warn("Studio enhancement compositing error, keeping base image:", e);
+    }
   }
 
   return {

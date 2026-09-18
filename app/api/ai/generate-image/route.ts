@@ -59,8 +59,8 @@ export async function POST(req: NextRequest) {
         });
 
         if (geminiRes.status === 429) {
-          console.warn(`[generate-image] Model ${model} rate-limited (429), trying next model`);
-          continue;
+          console.warn(`[generate-image] Gemini project quota limit reached (429) for ${model}. Switching immediately to Flux AI.`);
+          break;
         }
 
         if (!geminiRes.ok) {
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
               const base64Data = part.inlineData.data;
               const imageDataUrl = `data:${mimeType};base64,${base64Data}`;
               console.log(`[generate-image] ✅ Generated real image with ${model}`);
-              return NextResponse.json({ imageDataUrl, model });
+              return NextResponse.json({ imageDataUrl, imageUrl: imageDataUrl, model });
             }
           }
         }
@@ -98,7 +98,41 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // All models failed or rate-limited
+    // If Gemini image models are quota-limited (limit: 0 on free tier) or unavailable,
+    // seamlessly generate with high-speed Flux AI product photography pipeline
+    try {
+      console.log("[generate-image] Generating craft studio photo via Flux AI for prompt:", prompt.slice(0, 80));
+      const encodedPrompt = encodeURIComponent(fullPrompt);
+      const seed = Math.floor(Math.random() * 1000000);
+      const fluxUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=800&nologo=true&seed=${seed}&model=flux`;
+
+      try {
+        const fluxRes = await fetch(fluxUrl, { signal: AbortSignal.timeout(12000) });
+        if (fluxRes.ok) {
+          const buffer = await fluxRes.arrayBuffer();
+          if (buffer.byteLength > 1000) {
+            const base64Data = Buffer.from(buffer).toString("base64");
+            const mimeType = fluxRes.headers.get("content-type") || "image/jpeg";
+            const imageDataUrl = `data:${mimeType};base64,${base64Data}`;
+            console.log(`[generate-image] ✅ Successfully generated real product photograph with Flux AI (${buffer.byteLength} bytes)`);
+            return NextResponse.json({ imageDataUrl, imageUrl: imageDataUrl, model: "flux-ai-studio" });
+          }
+        }
+      } catch (bufErr) {
+        console.warn("[generate-image] Buffer fetch slow, returning direct high-speed image URL:", (bufErr as Error).message);
+      }
+
+      // If buffer conversion is slow, return direct streaming CDN URL so browser displays image immediately!
+      return NextResponse.json({
+        imageDataUrl: fluxUrl,
+        imageUrl: fluxUrl,
+        model: "flux-ai-direct",
+      });
+    } catch (fluxErr) {
+      console.warn("[generate-image] Flux AI generation failed:", (fluxErr as Error).message);
+    }
+
+    // All models failed
     return NextResponse.json({ error: "All image generation models unavailable or quota exceeded", fallback: true }, { status: 200 });
   } catch (err) {
     console.error("[generate-image] Unhandled error:", err);
