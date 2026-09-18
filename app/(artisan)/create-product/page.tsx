@@ -95,9 +95,13 @@ function CreateProductContent() {
   const [dimensions, setDimensions] = useState<string>("Standard Artisan Size");
 
   // Gemini Multimodal Cloud Vision API Key Configuration
-  const [geminiApiKey, setGeminiApiKey] = useState<string>("");
+  const [geminiApiKey, setGeminiApiKey] = useState<string>(
+    process.env.NEXT_PUBLIC_GEMINI_API_KEY || ""
+  );
   const [showVisionSettings, setShowVisionSettings] = useState<boolean>(false);
-  const [inputApiKey, setInputApiKey] = useState<string>("");
+  const [inputApiKey, setInputApiKey] = useState<string>(
+    process.env.NEXT_PUBLIC_GEMINI_API_KEY || ""
+  );
 
   useEffect(() => {
     try {
@@ -105,6 +109,9 @@ function CreateProductContent() {
       if (saved) {
         setGeminiApiKey(saved);
         setInputApiKey(saved);
+      } else if (process.env.NEXT_PUBLIC_GEMINI_API_KEY) {
+        setGeminiApiKey(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
+        setInputApiKey(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
       }
     } catch (e) {
       console.warn("Could not read gemini key from storage:", e);
@@ -303,12 +310,11 @@ function CreateProductContent() {
     const stepTimer3 = setTimeout(() => setAnalysisStep(4), 1400);
 
     try {
-      // Pass artisan workshop craft category hint if available
-      const currentCatHint = (category && category !== "Home Décor") ? category : (currentArtisan?.craftCategory as CraftCategory | undefined);
-
       // Execute vision analysis & AI studio background enhancement
+      const effectiveKey = geminiApiKey || process.env.NEXT_PUBLIC_GEMINI_API_KEY || undefined;
+
       const [analysisResult, studioResult] = await Promise.all([
-        analyzeCraftImage(dataUrl, fileName, geminiApiKey || undefined, currentCatHint),
+        analyzeCraftImage(dataUrl, fileName, effectiveKey, undefined),
         processAIStudioImage(dataUrl, selectedPreset),
       ]);
 
@@ -377,6 +383,45 @@ function CreateProductContent() {
     }
   }, [searchParams]);
 
+  // Helper to optimize image dataUrl for fast, lightweight Vision API transport (<150KB)
+  const optimizeImageForVision = (dataUrl: string): Promise<string> => {
+    return new Promise((resolve) => {
+      if (typeof window === "undefined") {
+        resolve(dataUrl);
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 1200;
+        let w = img.width;
+        let h = img.height;
+        if (w <= maxDim && h <= maxDim && dataUrl.length < 500000) {
+          resolve(dataUrl);
+          return;
+        }
+        if (w > h) {
+          h = Math.round((h * maxDim) / w);
+          w = maxDim;
+        } else {
+          w = Math.round((w * maxDim) / h);
+          h = maxDim;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL("image/jpeg", 0.82));
+        } else {
+          resolve(dataUrl);
+        }
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    });
+  };
+
   // Handle local image file upload (PNG/JPG/WEBP) or phone camera capture
   const handleFileUpload = (file: File) => {
     if (!file.type.startsWith("image/")) {
@@ -390,14 +435,15 @@ function CreateProductContent() {
     }
 
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       const dataUrl = reader.result as string;
       setRawImageUrl(dataUrl);
       setEnhancedImageUrl(dataUrl);
       setUploadedFileName(file.name);
 
-      // Automatically trigger Direct AI Upload Vision Analysis!
-      triggerAutoVisionAnalysis(dataUrl, file.name);
+      // Downscale to max 1200px for lightning-fast, guaranteed Gemini Vision upload
+      const visionDataUrl = await optimizeImageForVision(dataUrl);
+      triggerAutoVisionAnalysis(visionDataUrl, file.name);
     };
     reader.onerror = () => {
       showToast("Failed to read image file. Please try again.", "warning");
@@ -406,7 +452,7 @@ function CreateProductContent() {
   };
 
   // Real-time live camera capture handler
-  const handleCameraCapture = (dataUrl: string, fileName: string) => {
+  const handleCameraCapture = async (dataUrl: string, fileName: string) => {
     setRawImageUrl(dataUrl);
     setEnhancedImageUrl(dataUrl);
     setUploadedFileName(fileName);
@@ -416,7 +462,8 @@ function CreateProductContent() {
         : "📸 Live photo captured! AI Vision is analyzing your craft...",
       "info"
     );
-    triggerAutoVisionAnalysis(dataUrl, fileName);
+    const visionDataUrl = await optimizeImageForVision(dataUrl);
+    triggerAutoVisionAnalysis(visionDataUrl, fileName);
   };
 
   // Pick sample craft

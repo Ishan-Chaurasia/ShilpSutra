@@ -290,9 +290,10 @@ export async function analyzeCraftImage(
   categoryHint?: CraftCategory
 ): Promise<CraftVisionAnalysisResponse> {
   try {
+    const effectiveKey = apiKey || process.env.NEXT_PUBLIC_GEMINI_API_KEY || undefined;
     const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (apiKey) {
-      headers["x-gemini-api-key"] = apiKey;
+    if (effectiveKey) {
+      headers["x-gemini-api-key"] = effectiveKey;
     }
 
     // Attempt live server-side AI Vision call
@@ -302,7 +303,7 @@ export async function analyzeCraftImage(
       body: JSON.stringify({
         image: imageDataUrl,
         fileName: fileName || "craft-photo.jpg",
-        apiKey: apiKey || undefined,
+        apiKey: effectiveKey,
         categoryHint: categoryHint || undefined,
       }),
     });
