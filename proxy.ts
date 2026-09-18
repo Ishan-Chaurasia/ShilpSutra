@@ -16,7 +16,6 @@ let clerkHandler: any = null;
 try {
   clerkHandler = clerkMiddleware({
     publishableKey,
-    secretKey,
   });
 } catch (e) {
   console.warn("[Clerk Middleware Init Warning]:", e);
