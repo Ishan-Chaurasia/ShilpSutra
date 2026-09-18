@@ -1,26 +1,93 @@
 @import "tailwindcss";
 
+@theme {
+  --color-craft-green: #133E2B;
+  --color-craft-green-dark: #0B2418;
+  --color-craft-green-light: #1D543B;
+  --color-craft-sage: #819D94;
+  --color-craft-sage-light: #A7BFB7;
+  --color-craft-sage-dark: #58736B;
+  --color-craft-terracotta: #C85A32;
+  --color-craft-terracotta-dark: #9F3E1B;
+  --color-craft-terracotta-light: #DE7046;
+  --color-craft-ivory: #FAF7F2;
+  --color-craft-cream: #F3ECE2;
+  --color-craft-sand: #E7DDD0;
+  --color-craft-gold: #C99E2F;
+  --color-craft-gold-light: #F0D076;
+  --color-craft-charcoal: #1C2321;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #FAF7F2;
+  --foreground: #1C2321;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
 }
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F3ECE2;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C85A32;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9F3E1B;
+}
+
+/* Craft pulse animation */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(200, 90, 50, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(200, 90, 50, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(200, 90, 50, 0);
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+/* Waveform pulse for voice assistant */
+@keyframes soundwave {
+  0%, 100% {
+    height: 6px;
+  }
+  50% {
+    height: 28px;
+  }
+}
+
+.animate-soundwave-1 { animation: soundwave 1.1s ease-in-out infinite; }
+.animate-soundwave-2 { animation: soundwave 0.8s ease-in-out infinite 0.15s; }
+.animate-soundwave-3 { animation: soundwave 1.3s ease-in-out infinite 0.3s; }
+.animate-soundwave-4 { animation: soundwave 0.9s ease-in-out infinite 0.2s; }
+.animate-soundwave-5 { animation: soundwave 1.2s ease-in-out infinite 0.4s; }
+
+
