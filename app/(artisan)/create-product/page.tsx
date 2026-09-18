@@ -83,7 +83,6 @@ function CreateProductContent() {
 
   // Direct AI Upload & Vision Auto-Cataloging States
   const [isAnalyzingImage, setIsAnalyzingImage] = useState<boolean>(false);
-  const [isGeneratingStudioPhoto, setIsGeneratingStudioPhoto] = useState<boolean>(false);
   const [analysisStep, setAnalysisStep] = useState<number>(1);
   const [aiExtracted, setAiExtracted] = useState<boolean>(false);
   const [aiConfidence, setAiConfidence] = useState<number>(0.95);
@@ -508,41 +507,7 @@ function CreateProductContent() {
     }
   };
 
-  // Generate full Studio-Grade AI Product Photograph from craft attributes
-  const handleGenerateAIStudioPhoto = async () => {
-    setIsGeneratingStudioPhoto(true);
-    showToast(
-      language === "hi"
-        ? "✨ AI आपके शिल्प के सटीक विवरण से नया स्टूडियो फोटो तैयार कर रहा है..."
-        : "✨ AI is generating a pristine commercial studio photograph of your craft...",
-      "info"
-    );
-    try {
-      const prompt = `Professional e-commerce commercial studio product photograph of authentic Indian handcrafted ${category} ${productName}, natural materials: ${material}, clean white studio background, soft overhead lighting, 8k resolution, crisp texture, no people, no text, no watermarks`;
-      const res = await fetch("/api/ai/generate-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.imageDataUrl) {
-          setEnhancedImageUrl(data.imageDataUrl);
-          showToast(
-            language === "hi"
-              ? "✨ AI स्टूडियो फ़ोटो सफलतापूर्वक जनरेट हो गई!"
-              : "✨ Successfully generated Studio-Grade AI Product Photograph!",
-            "success"
-          );
-        }
-      }
-    } catch (e) {
-      console.warn("Could not generate studio photo:", e);
-      showToast("Could not generate AI photo, retaining studio cutout.", "warning");
-    } finally {
-      setIsGeneratingStudioPhoto(false);
-    }
-  };
+
 
   // Run Voice & Catalog generation
   const handleRunCatalogAI = async () => {
@@ -1295,46 +1260,6 @@ function CreateProductContent() {
             />
           </div>
 
-          {/* AI Image Generation Card for Direct Upload */}
-          <div className="bg-gradient-to-r from-purple-50 via-emerald-50/40 to-amber-50 p-4 rounded-2xl border border-purple-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                <Sparkles className="w-5 h-5 text-amber-200" />
-              </div>
-              <div>
-                <h4 className="font-bold text-xs sm:text-sm text-neutral-900 flex items-center gap-2">
-                  <span>{language === "hi" ? "🎨 AI स्टूडियो फ़ोटोग्राफ़ी जनरेटर" : "🎨 Studio-Grade AI Product Photograph"}</span>
-                  <span className="text-[10px] bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded-full uppercase">
-                    Commercial Studio
-                  </span>
-                </h4>
-                <p className="text-xs text-neutral-600">
-                  {language === "hi" 
-                    ? "क्या आपकी असली फोटो में प्रकाश या स्पष्टता कम है? AI आपके शिल्प के सटीक विवरण से एक नया स्टूडियो फोटो तैयार कर सकता है।"
-                    : "Generate a pristine, commercial studio photograph strictly based on your craft's verified details."}
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              disabled={isGeneratingStudioPhoto}
-              onClick={handleGenerateAIStudioPhoto}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow transition-all shrink-0 cursor-pointer disabled:opacity-50"
-            >
-              {isGeneratingStudioPhoto ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Generating AI Photo...</span>
-                </>
-              ) : (
-                <>
-                  <Wand2 className="w-3.5 h-3.5 text-amber-200" />
-                  <span>Generate New Studio AI Photo</span>
-                </>
-              )}
-            </button>
-          </div>
 
           {/* Studio Backdrop Presets */}
           <StudioBackgroundSelector
