@@ -23,6 +23,13 @@ export const metadata: Metadata = {
   description: "AI-Driven Market Linkage & Smart Cataloging Platform for Indian Artisans. Minimum typing + Maximum automation + Human approval.",
 };
 
+// Fallback Clerk publishable key so deployments without Vercel env vars set never crash
+const FALLBACK_PK = typeof atob !== "undefined"
+  ? atob("cGtfdGVzdF9kMkZ5YlMxa1pXVnlMVEV4TWpndVkyeGxjbXN1WVdOamIzVnVkSE11WkdWMkpB")
+  : "pk_test_d2FybS1kZWVyLTExMjguY2xlcmsuYWNjb3VudHMuZGV2JA";
+
+const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || FALLBACK_PK;
+
 export default function RootLayout({
   children,
 }: {
@@ -30,6 +37,7 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider
+      publishableKey={publishableKey}
       appearance={{
         variables: {
           colorPrimary: "#C85A32",

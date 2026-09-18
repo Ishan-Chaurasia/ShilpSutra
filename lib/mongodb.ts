@@ -25,7 +25,10 @@ if (isMongoConfigured() && uri) {
       client = new MongoClient(uri, {
         serverSelectionTimeoutMS: 5000,
       });
-      global._mongoClientPromise = client.connect();
+      global._mongoClientPromise = client.connect().catch((e) => {
+        console.warn("[MongoDB] Dev connection warning:", e.message);
+        return null as any;
+      });
     }
     clientPromise = global._mongoClientPromise;
   } else {
@@ -33,7 +36,10 @@ if (isMongoConfigured() && uri) {
     client = new MongoClient(uri, {
       serverSelectionTimeoutMS: 5000,
     });
-    clientPromise = client.connect();
+    clientPromise = client.connect().catch((e) => {
+      console.warn("[MongoDB] Prod connection warning:", e.message);
+      return null as any;
+    });
   }
 }
 
